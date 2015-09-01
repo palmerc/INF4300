@@ -1,2 +1,9 @@
+#Folders
 */html/
+*matlab-wordpress/
+
+#Specific files
+*blogCredentials.m
+
+#Type of files
 *~
