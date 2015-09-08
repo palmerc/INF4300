@@ -10,18 +10,21 @@
 % descriptions.
 
 
-function [img, glcmVar, glcmCtr, glcmEnt] = GLCMExercise()
+function GLCMExercise()
 %clear all
 close all
+calculateGLCM = 0;
 
 %% Task 1
 % This task is to implement code
 % Testing my GLCM implementation
 testImage = [0 0 1 1; 0 0 1 1; 0 2 2 2; 2 2 3 3]
-disp('Parameters: dx = 1, dy = 0, gives this result:');
-GLCM(testImage,4,1,0,0,0)
-disp('Parameters: dx = 0, dy = 1, gives this result:');
-GLCM(testImage,4,0,1,0,0)
+disp('Parameters: dx = 1, dy = 0, gives this result:')
+GLCM1 = GLCM(testImage,4,1,0,0,0);
+disp(GLCM1)
+disp('Parameters: dx = 0, dy = 1, gives this result:')
+GLCM2 = GLCM(testImage,4,0,1,0,0);
+disp(GLCM2)
 
 % Read the input image
 img = imread('zebra_2.tif');
@@ -46,7 +49,7 @@ figure(2); imshow(img_std, [0 G-1])
 title('Image after histogram equalization');
 % Lets look at the histograms of the original image and the image after
 % histogramequalization
-figure(2);
+figure(3);
 subplot(211)
 h = imhist(img);
 plot([0:255],h/sum(h),'linewidth',2);
@@ -69,28 +72,33 @@ dx = 0;
 dy = 2;
 
 % Call the function to calculate the feature images with gliding GLCM
-[glcmVar,glcmCtr,glcmEnt] = glidingGLCM(img_std,G,dx,dy,windowSize);
+if calculateGLCM == 1
+    [glcmVar,glcmCtr,glcmEnt] = glidingGLCM(img_std,G,dx,dy,windowSize);
+    save('Data.mat','glcmVar','glcmCtr','glcmEnt','windowSize','G');
+else
+    load Data.mat;
+end
 
 %% Task 2 : Treshold the GLCM feature images
 % We want to treshold the resulting GLCM variance, GLCM contrast and GLCM
 % entropy
 
 % Display the results
-figure(3);clf
+figure(4);clf
 subplot(211)
 imshow(glcmVar, []); title('GLCM Variance');
 subplot(212)
-imshow(img.*uint8(glcmVar > (max(glcmVar(:)) * 0.5)),[])
+imshow(img.*uint8(glcmVar > (max(glcmVar(:)) * 0.5)),[]);
 title('Image thresholded with GLCM Variance');
 
-figure(4);clf
+figure(5);clf
 subplot(211)
 imshow(glcmCtr, []); title('GLCM Contrast');
 subplot(212)
 imshow(img.*uint8(glcmCtr > (max(glcmCtr(:)) * 0.2)),[]);
 title('GLCM Contrast thresholded');
 
-figure(5);clf
+figure(6);clf
 subplot(211)
 imshow(glcmEnt, []); title('GLCM Entropy' );
 subplot(212)
@@ -103,21 +111,21 @@ title('GLCM Entropy tresholded');
 
 % Remember that the variance is the square of the standard deviation
 std_var = stdfilt(img, ones(windowSize)).^2;
-figure(6), subplot(211), imshow(std_var, []), title('Variance');
-subplot(212), imshow(img.*uint8(std_var > (max(std_var(:)) * 0.25)),[])
+figure(7); subplot(211); imshow(std_var, []); title('Variance');
+subplot(212), imshow(img.*uint8(std_var > (max(std_var(:)) * 0.25)),[]);
 title('Tresholded Variance')
 
 % See page 532 in Gonzales and woods for a definition on entropy ("average
 % information")
 std_ent = entropyfilt(img, ones(windowSize));
-figure(7), subplot(211), imshow(std_ent, []), title('Entropy' );
+figure(8); subplot(211); imshow(std_ent, []); title('Entropy' );
 subplot(212), imshow(img.*uint8(std_ent > (max(std_ent(:)) * 0.6)),[])
 title('Tresholded entropy')
 
 % Variance on image after histeq
 std_var_of_img_std = stdfilt(img_std, ones(windowSize)).^2;
-figure(8), subplot(211), imshow(glcmVar, []), title('GLCM Variance');
-subplot(212), imshow(std_var_of_img_std, []), title('Variance')
+figure(9), subplot(211), imshow(glcmVar, []), title('GLCM Variance');
+subplot(212), imshow(std_var_of_img_std, []), title('Variance');
 
 %% Task 4: Using Laws texture mask to find texture features
 % See the lecture foils for more info on Laws texture masks
@@ -138,22 +146,22 @@ R5 = conv2(S3, S3, 'full');
 E5E5 = conv2(E5', E5, 'full');
 
 laws_energy = imfilter(double(img), E5E5, 'symmetric', 'conv');
-figure(10);
-imshow(laws_energy, [])
+figure(10);clf
+imshow(laws_energy, []);
 
 laws_mean_abs_feat = imfilter(abs(laws_energy), ones(35), 'symmetric');
-figure(9);
-subplot(121)
-imshow(laws_mean_abs_feat, [])
-subplot(122),
-imshow(laws_mean_abs_feat > (max(laws_mean_abs_feat(:)) * 0.2))
+figure(11);clf
+subplot(211)
+imshow(laws_mean_abs_feat, []);
+subplot(212),
+imshow(laws_mean_abs_feat > (max(laws_mean_abs_feat(:)) * 0.2));
 
 laws_std_feat  = stdfilt(laws_energy, ones(35));
-figure(10)
-subplot(121)
-imshow(laws_std_feat,[])
-subplot(122)
-imshow(laws_std_feat > (max(laws_std_feat(:))* 0.25))
+figure(12);clf
+subplot(211)
+imshow(laws_std_feat,[]);
+subplot(212)
+imshow(laws_std_feat > (max(laws_std_feat(:))* 0.3))
 
 end
 
